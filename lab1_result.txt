@@ -1,0 +1,6 @@
+ID	Arrival (unit)	Start (unit)	End (unit)	Teller
+1	1	1	11	1
+2	5	5	7	2
+3	6	7	10	2
+4	7	10	14	2
+5	9	11	12	1
