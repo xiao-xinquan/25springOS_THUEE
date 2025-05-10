@@ -60,6 +60,7 @@ int get_relative_time_unit() {
 
 void teller_function(int teller_id) {
     while (true) {
+        teller_available.P();
         customer_ready.P();
 
         Customer* cust = nullptr;
@@ -69,14 +70,11 @@ void teller_function(int teller_id) {
             waiting_queue.pop();
         }
 
-        if (cust == nullptr) return;
-
+        if (cust == nullptr) break; 
         {
             lock_guard<mutex> lock(cout_mutex);
             cout << "at " << get_relative_time_unit() << " units: teller " << teller_id << " is calling customer " << cust->id << endl;
         }
-
-        teller_available.P();
 
         cust->start_service_time = max(get_relative_time_unit(), cust->arrival_time);
         cust->end_service_time = cust->start_service_time + cust->service_time;
@@ -116,7 +114,6 @@ void customer_arrival() {
     }
 
     for (int i = 0; i < num_tellers; ++i) {
-        teller_available.P();
         {
             lock_guard<mutex> lock(queue_mutex);
             waiting_queue.push(nullptr);
