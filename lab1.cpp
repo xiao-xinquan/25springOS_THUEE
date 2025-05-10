@@ -50,8 +50,8 @@ chrono::time_point<chrono::steady_clock> start_time;
 
 int TIME_UNIT_MS = 200; // adjustable time unit
 
-Semaphore teller_available(num_tellers);  // 控制顾客什么时候能排队
-Semaphore customer_ready(0);              // 控制柜员什么时候能叫号
+Semaphore teller_available(num_tellers); 
+Semaphore customer_ready(0);
 mutex cout_mutex;
 
 int get_relative_time_unit() {
@@ -76,7 +76,7 @@ void teller_function(int teller_id) {
             cout << "at " << get_relative_time_unit() << " units: teller " << teller_id << " is calling customer " << cust->id << endl;
         }
 
-        // teller_available.P();
+        teller_available.P();
 
         cust->start_service_time = max(get_relative_time_unit(), cust->arrival_time);
         cust->end_service_time = cust->start_service_time + cust->service_time;
@@ -116,7 +116,7 @@ void customer_arrival() {
     }
 
     for (int i = 0; i < num_tellers; ++i) {
-        teller_available.P();  // 等待柜员完成服务
+        teller_available.P();
         {
             lock_guard<mutex> lock(queue_mutex);
             waiting_queue.push(nullptr);

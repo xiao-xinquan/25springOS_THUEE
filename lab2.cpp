@@ -14,14 +14,13 @@
 #include <sys/stat.h>
 
 #define SIZE 1000000
-#define THRESHOLD 10000
+#define THRESHOLD 1000
 #define MAX_PROCESSES 20
 #define INPUT_FILE "lab2.txt"
 #define OUTPUT_FILE "lab2_sorted.txt"
 #define SHM_NAME "/lab2_shm_tree"
 
 // int process_count = 1;
-
 
 int partition(int* arr, int low, int high) {
     int pivot = arr[high];
@@ -47,8 +46,7 @@ void quicksort(int* arr, int low, int high, int* process_count, sem_t* sem) {
 
     pid_t left_pid = -1, right_pid = -1;
     bool left_forked = false, right_forked = false;
-    
-    // 左侧分支
+
     sem_wait(sem);
     if (*process_count < MAX_PROCESSES) {
         ++(*process_count);
@@ -63,8 +61,7 @@ void quicksort(int* arr, int low, int high, int* process_count, sem_t* sem) {
         sem_post(sem);
         quicksort(arr, low, p - 1, process_count, sem);
     }
-    
-    // 右侧分支
+
     sem_wait(sem);
     if (*process_count < MAX_PROCESSES) {
         ++(*process_count);
@@ -82,8 +79,6 @@ void quicksort(int* arr, int low, int high, int* process_count, sem_t* sem) {
 
     std::cout << "Current process count: " << *process_count << std::endl;
 
-    
-    // 等待子进程并回收进程数
     if (left_forked) {
         waitpid(left_pid, NULL, 0);
         sem_wait(sem);
@@ -122,7 +117,6 @@ int main() {
 
     sem_t* sem = sem_open("/process_count_sem", O_CREAT, 0666, 1);
 
-
     generate_random_file();
 
     std::vector<int> data(SIZE);
@@ -153,12 +147,9 @@ int main() {
     close(shm_fd);
     shm_unlink(SHM_NAME);
 
-    // 释放共享内存映射
     munmap(process_count, sizeof(int));
     close(shm_fd_pc);
     shm_unlink("/process_count_shm");
-
-    // 释放信号量
     sem_close(sem);
     sem_unlink("/process_count_sem");
     return 0;

@@ -18,14 +18,12 @@ struct Block {
     bool is_free;
     Block* next;
 
-    // Block(int s, int sz, bool f) : start(s), size(sz), is_free(f), next(nullptr) {}
     Block(int s, int sz, bool f) : start(s), size(sz), is_free(f), next(nullptr), id(-1) {}
 };
 
 class MemoryManager {
     Block* head;
-    // int last_alloc_index;
-    Block* last_alloc_ptr; // 用于 NEXT_FIT 策略
+    Block* last_alloc_ptr;
     ofstream csv_out;
     int step;
     
@@ -40,7 +38,6 @@ public:
     }
 
     ~MemoryManager() {
-        // 释放整个链表，防止内存泄漏
         Block* cur = head;
         while (cur) {
             Block* next = cur->next;
@@ -60,7 +57,6 @@ public:
     }
 
     bool allocate(int id, int size) {
-        // 检查是否已存在该 ID
         for (Block* cur = head; cur != nullptr; cur = cur->next) {
             if (!cur->is_free && cur->id == id) {
                 cout << "ID already allocated: " << id << endl;
@@ -93,15 +89,10 @@ public:
                 bool first_iteration = true;
             
                 do {
-                    cout << "[NEXT_FIT] visiting block: start=" << cur->start 
-                            << ", size=" << cur->size 
-                            << ", is_free=" << cur->is_free << endl;
-            
                     if (cur->is_free && cur->size >= size) {
                         best = cur;
                         break;
                     }
-            
                     cur = cur->next ? cur->next : head;
                 } while (cur != start || first_iteration);
                 first_iteration = false;
@@ -146,7 +137,7 @@ public:
         best->size = size;
         best->is_free = false;
         best->id = id;
-        last_alloc_ptr = best; // 更新 last_alloc_ptr
+        last_alloc_ptr = best; 
         write_snapshot();
         return true;
     }
@@ -157,8 +148,7 @@ public:
             if (!cur->is_free && cur->id == id) {
                 cur->id = -1;
                 cur->is_free = true;
-            
-                // 向前合并：找前驱
+
                 Block* prev = nullptr;
                 Block* scan = head;
                 while (scan && scan != cur) {
@@ -167,17 +157,14 @@ public:
                 }
             
                 if (prev && prev->is_free) {
-                    // 合并 prev 和 cur
                     prev->size += cur->size;
                     prev->next = cur->next;
                     delete cur;
-                    cur = prev;  // 指向合并后新的位置
+                    cur = prev; 
                 }
-            
-                // 向后合并（保留原来的 merge）
+
                 merge();
-                this->last_alloc_ptr = head; // 🛠️ 避免 dangling pointer after merge
-                // 释放后 ID 置为 -1
+                this->last_alloc_ptr = head; 
                 cur->id = -1;
                 write_snapshot();
                 return;
@@ -194,7 +181,7 @@ public:
                 Block* tmp = cur->next;
                 cur->size += tmp->size;
                 cur->next = tmp->next;
-                cur->id = -1; // 释放后 ID 置为 -1
+                cur->id = -1; 
                 delete tmp;
             } else {
                 cur = cur->next;
@@ -238,7 +225,6 @@ int main(int argc, char* argv[]) {
     }
     fin.close();
 
-    // 自动调用 Python 脚本
     system("python3 lab3_visualize.py");
 
     return 0;
